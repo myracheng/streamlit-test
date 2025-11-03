@@ -203,7 +203,7 @@ st.markdown(f"*Example: {topic['example']}*")
 # --- User prompt ---------
 # -------------------------
 user_prompt = st.text_area(
-    "### Describe an experience related to this topic to an AI model:",
+    "### Describe an experience related to this topic to an AI model (please do NOT use any writing assistance):",
     key="user_prompt_text"
 )
 
