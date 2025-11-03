@@ -119,7 +119,6 @@ st.title("Your Preferences")
 
 client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", "YOUR_API_KEY_HERE"))
 
-from filelock import FileLock
 
 RESULTS_FILE = "results.csv"
 BASE_COLUMNS = [
