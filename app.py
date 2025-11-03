@@ -381,7 +381,7 @@ if st.session_state.generated and not st.session_state.submitted:
 if st.session_state.submitted:
     st.success("✅ Response logged successfully! Redirecting you to Prolific...")
 
-    completion_code = "ABC1234"  # Replace with your real Prolific completion code
+    completion_code = "C1I7QVTN"  # Replace with your real Prolific completion code
     redirect_url = f"https://app.prolific.com/submissions/complete?cc={completion_code}"
 
     st.markdown(f"[Click here to return to Prolific immediately]({redirect_url})")
