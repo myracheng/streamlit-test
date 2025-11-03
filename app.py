@@ -214,18 +214,23 @@ if (not st.session_state.generated
     and st.button("Generate Responses", key="gen_btn")
     and user_prompt.strip()):
     with st.spinner("Generating responses..."):
-        gen = client.responses.create(
-            model="gpt-4.1",
-            input=(
-                "Generate **three distinct responses** representing different perspectives."
-                " Each response must begin with ### to separate them."
-                " Do not include labels or commentary.\n\nPrompt:\n"
-                f"{user_prompt}"
-            ),
-            temperature=0.9,
-        )
-        text = gen.output_text
-        parts = [p.strip() for p in text.split("###") if p.strip()]
+        for attempt in range(4):
+            try:
+                gen = client.responses.create(
+                    model="gpt-4.1",
+                    input=(
+                        "Generate **three distinct responses** representing different perspectives."
+                        " Each response must begin with ### to separate them."
+                        " Do not include labels or commentary.\n\nPrompt:\n"
+                        f"{user_prompt}"
+                    ),
+                    temperature=0.9,
+                )
+                text = gen.output_text
+                parts = [p.strip() for p in text.split("###") if p.strip()] 
+                break
+            except Exception as e:
+                time.sleep((2**attempt) + random.random())
 
     if len(parts) < 3:
         st.error("❌ Could not parse three responses correctly. Try rephrasing your prompt.")
