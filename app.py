@@ -57,10 +57,8 @@ def insert_result(row):
 # ======================= CONSENT GATE (add near top) ==========================
 import pandas as pd, os, time
 from datetime import datetime
-from filelock import FileLock
 
 CONSENT_FILE = "consent.csv"
-CONSENT_LOCK = CONSENT_FILE + ".lock"
 
 CONSENT_COLUMNS = [
     "timestamp_utc", "prolific_pid", "session_id",
@@ -68,9 +66,7 @@ CONSENT_COLUMNS = [
 ]
 
 # Ensure file exists with header (under a lock)
-lock = FileLock(CONSENT_LOCK)
-with lock:
-    if not os.path.exists(CONSENT_FILE):
+if not os.path.exists(CONSENT_FILE):
         pd.DataFrame(columns=CONSENT_COLUMNS).to_csv(CONSENT_FILE, index=False)
 
 st.markdown("## Consent to Participate")
@@ -108,8 +104,7 @@ if submitted_consent:
         "user_agent": st.session_state.get("_user_agent", "")  # optional; see below if you want to capture it
     }])[CONSENT_COLUMNS]
 
-    with lock:
-        row.to_csv(CONSENT_FILE, mode="a", header=False, index=False)
+    row.to_csv(CONSENT_FILE, mode="a", header=False, index=False)
 
     st.session_state.consented = agree
 
@@ -127,30 +122,15 @@ client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", "YOUR_API_KEY_HERE"))
 from filelock import FileLock
 
 RESULTS_FILE = "results.csv"
-LOCK_FILE = RESULTS_FILE + ".lock"
 BASE_COLUMNS = [
     "timestamp","prolific_pid","session_id","topic","user_prompt",
     "response_a","response_b","response_c","user_choice","comments"
 ]
 
 # Create the file with header under a lock
-lock = FileLock(LOCK_FILE)
-with lock:
-    if not os.path.exists(RESULTS_FILE):
+if not os.path.exists(RESULTS_FILE):
         pd.DataFrame(columns=BASE_COLUMNS).to_csv(RESULTS_FILE, index=False)
 
-# RESULTS_FILE = "results.csv"
-# BASE_COLUMNS = [
-#     "timestamp", "prolific_pid", "session_id",
-#     "topic",
-#     "user_prompt",
-#     "response_a", "response_b", "response_c",
-#     # "rating_a", "rating_b", "rating_c",
-#     "user_choice",
-#     "comments"  # NEW
-# ]
-# if not os.path.exists(RESULTS_FILE):
-#     pd.DataFrame(columns=BASE_COLUMNS).to_csv(RESULTS_FILE, index=False)
 
 # --- Prolific identifiers ---
 query_params = st.query_params
@@ -279,15 +259,15 @@ if (not st.session_state.generated
 # --- Display responses & select
 # -------------------------
 if st.session_state.generated and not st.session_state.submitted:
-    st.subheader("🅰️ Response A")
+    st.subheader("Response A")
     st.write(st.session_state.resp_a)
     # st.info(f"Judge rating: {st.session_state.rating_a}")
 
-    st.subheader("🅱️ Response B")
+    st.subheader("Response B")
     st.write(st.session_state.resp_b)
     # st.info(f"Judge rating: {st.session_state.rating_b}")
 
-    st.subheader("🅾️ Response C")
+    st.subheader("Response C")
     st.write(st.session_state.resp_c)
     # st.info(f"Judge rating: {st.session_state.rating_c}")
 
@@ -325,54 +305,6 @@ if st.session_state.generated and not st.session_state.submitted:
         })
 
 
-        # Ensure CSV has expected columns (handles accidental schema drift)
-        if not os.path.exists(RESULTS_FILE):
-            pd.DataFrame(columns=BASE_COLUMNS).to_csv(RESULTS_FILE, index=False)
-        else:
-            # If file exists with different columns, align on write
-            existing_cols = pd.read_csv(RESULTS_FILE, nrows=0).columns.tolist()
-            if existing_cols != BASE_COLUMNS:
-                # Try to align by re-saving header (non-destructive append still works)
-                # (If you need strict schema migration, handle externally.)
-                pass
-
-        new_row = pd.DataFrame([{
-            "timestamp": datetime.utcnow().isoformat(),
-            "prolific_pid": prolific_pid,
-            "session_id": session_id,
-            "topic": topic["text"],
-            "user_prompt": user_prompt,
-            "response_a": st.session_state.resp_a,
-            "response_b": st.session_state.resp_b,
-            "response_c": st.session_state.resp_c,
-            # "rating_a": st.session_state.rating_a,
-            # "rating_b": st.session_state.rating_b,
-            # "rating_c": st.session_state.rating_c,
-            "user_choice": user_choice,
-            "comments": comments.strip() if comments else ""
-        }])[BASE_COLUMNS]
-
-        with lock:
-            new_row.to_csv(RESULTS_FILE, mode="a", header=False, index=False)
-
-
-        # new_row = pd.DataFrame([{
-        #     "timestamp": datetime.utcnow().isoformat(),
-        #     "prolific_pid": prolific_pid,
-        #     "session_id": session_id,
-        #     "topic": topic["text"],  # store text, not dict
-        #     "user_prompt": user_prompt,
-        #     "response_a": st.session_state.resp_a,
-        #     "response_b": st.session_state.resp_b,
-        #     "response_c": st.session_state.resp_c,
-        #     # "rating_a": st.session_state.rating_a,
-        #     # "rating_b": st.session_state.rating_b,
-        #     # "rating_c": st.session_state.rating_c,
-        #     "user_choice": user_choice,
-        #     "comments": comments.strip() if comments else ""
-        # }])[BASE_COLUMNS]  # enforce column order
-
-        # new_row.to_csv(RESULTS_FILE, mode="a", header=False, index=False)
         st.session_state.submitted = True
 
 # -------------------------
