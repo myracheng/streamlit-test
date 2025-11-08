@@ -175,8 +175,8 @@ if submitted_consent:
     consent_value = "agree" if agree else "decline"
     row = pd.DataFrame([{
         "timestamp_utc": datetime.utcnow().isoformat(),
-        "prolific_pid": st.query_params.get("PROLIFIC_PID", ["anon"])[0],
-        "session_id": st.query_params.get("SESSION_ID", ["none"])[0],
+        "prolific_pid": st.query_params.get("PROLIFIC_PID", ["anon"]),
+        "session_id": st.query_params.get("SESSION_ID", ["none"]),
         "consent": consent_value,
         "reason_if_declined": decline_reason.strip(),
         "user_agent": st.session_state.get("_user_agent", "")  # optional; see below if you want to capture it
