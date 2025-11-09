@@ -423,7 +423,23 @@ if st.button("Submit survey & finalize"):
     })
 
     st.success("✅ Thanks! Your responses have been recorded.")
-    st.page_link("app.py", label="Back to main page", icon="🏠")
+    st.session_state.submitted = True
+    # st.page_link("app.py", label="Back to main page", icon="🏠")
+
+if st.session_state.submitted:
+    st.success("✅ Response logged successfully! Redirecting you to Prolific...")
+
+    completion_code = "C1I7QVTN"  # Replace with your real Prolific completion code
+    redirect_url = f"https://app.prolific.com/submissions/complete?cc={completion_code}"
+
+    st.markdown(f"[Click here to return to Prolific immediately]({redirect_url})")
+    components.html(f"""
+        <script>
+            setTimeout(function() {{
+                window.location.href = "{redirect_url}";
+            }}, 2000);
+        </script>
+    """, height=0, width=0)
 
 
 
