@@ -60,8 +60,23 @@ st.markdown("""
 @st.cache_resource
 def get_engine():
     return create_engine(st.secrets["DATABASE_URL"], pool_pre_ping=True)
+from datetime import datetime
+import uuid
+from sqlalchemy import text
+
+def _s(val):
+    # stringify with empty string for None
+    return "" if val is None else str(val)
 
 def insert_result(row):
+    # Minimal validation — make comments mandatory if that's desired
+    required_keys = ["prolific_pid", "session_id", "topic", "user_prompt",
+                     "response_a", "response_b", "response_c",
+                     "user_choice", "comments"]
+    missing = [k for k in required_keys if k not in row or row[k] in (None, "")]
+    if missing:
+        raise ValueError(f"Missing required fields: {missing}")
+
     eng = get_engine()
     with eng.begin() as conn:
         conn.execute(text("""
@@ -80,21 +95,21 @@ def insert_result(row):
               wellbeing_choice TEXT,
               comments_wellbeing TEXT,
               ai_freq TEXT,
-              aias_life INTEGER,
-              aias_work INTEGER,
-              aias_future INTEGER,
-              aias_humanity INTEGER,
-              aias_attention INTEGER,
-              tipi_reserved INTEGER,
-              tipi_trusting INTEGER,
-              tipi_lazy INTEGER,
-              tipi_relaxed INTEGER,
-              tipi_few_artistic INTEGER,
-              tipi_outgoing INTEGER,
-              tipi_fault_finding INTEGER,
-              tipi_thorough INTEGER,
-              tipi_nervous INTEGER,
-              tipi_imagination INTEGER
+              aias_life TEXT,
+              aias_work TEXT,
+              aias_future TEXT,
+              aias_humanity TEXT,
+              aias_attention TEXT,
+              tipi_reserved TEXT,
+              tipi_trusting TEXT,
+              tipi_lazy TEXT,
+              tipi_relaxed TEXT,
+              tipi_few_artistic TEXT,
+              tipi_outgoing TEXT,
+              tipi_fault_finding TEXT,
+              tipi_thorough TEXT,
+              tipi_nervous TEXT,
+              tipi_imagination TEXT
             );
         """))
 
@@ -108,41 +123,49 @@ def insert_result(row):
               tipi_outgoing, tipi_fault_finding, tipi_thorough, tipi_nervous, tipi_imagination
             ) VALUES (
               :id, :ts, :pid, :sid, :topic, :up,
-              :ra, :rb, :rc,  :choice, :comments,
+              :ra, :rb, :rc, :choice, :comments,
               :wellbeing_choice, :comments_wellbeing,
               :ai_freq, :aias_life, :aias_work, :aias_future, :aias_humanity, :aias_attention,
               :tipi_reserved, :tipi_trusting, :tipi_lazy, :tipi_relaxed, :tipi_few_artistic,
               :tipi_outgoing, :tipi_fault_finding, :tipi_thorough, :tipi_nervous, :tipi_imagination
-
             )
         """), dict(
             id=str(uuid.uuid4()),
             ts=datetime.utcnow().isoformat(),
-            pid=row["prolific_pid"],
-            sid=row["session_id"],
-            topic=row["topic"],
-            up=row["user_prompt"],
-            ra=row["response_a"], rb=row["response_b"], rc=row["response_c"],
-            choice=row["user_choice"], comments=row["comments"],
-            wellbeing_choice=row.get("wellbeing_choice"),
-            comments_wellbeing=row.get("comments_wellbeing"),
-            ai_freq=row.get("ai_freq"),
-            aias_life=row.get("aias_life"),
-            aias_work=row.get("aias_work"),
-            aias_future=row.get("aias_future"),
-            aias_humanity=row.get("aias_humanity"),
-            aias_attention=row.get("aias_attention"),
-            tipi_reserved=row.get("tipi_reserved"),
-            tipi_trusting=row.get("tipi_trusting"),
-            tipi_lazy=row.get("tipi_lazy"),
-            tipi_relaxed=row.get("tipi_relaxed"),
-            tipi_few_artistic=row.get("tipi_few_artistic"),
-            tipi_outgoing=row.get("tipi_outgoing"),
-            tipi_fault_finding=row.get("tipi_fault_finding"),
-            tipi_thorough=row.get("tipi_thorough"),
-            tipi_nervous=row.get("tipi_nervous"),
-            tipi_imagination=row.get("tipi_imagination"),
+
+            pid=_s(row.get("prolific_pid")),
+            sid=_s(row.get("session_id")),
+            topic=_s(row.get("topic")),
+            up=_s(row.get("user_prompt")),
+
+            ra=_s(row.get("response_a")),
+            rb=_s(row.get("response_b")),
+            rc=_s(row.get("response_c")),
+            choice=_s(row.get("user_choice")),
+            comments=_s(row.get("comments")),
+
+            wellbeing_choice=_s(row.get("wellbeing_choice")),
+            comments_wellbeing=_s(row.get("comments_wellbeing")),
+
+            ai_freq=_s(row.get("ai_freq")),
+            aias_life=_s(row.get("aias_life")),
+            aias_work=_s(row.get("aias_work")),
+            aias_future=_s(row.get("aias_future")),
+            aias_humanity=_s(row.get("aias_humanity")),
+            aias_attention=_s(row.get("aias_attention")),
+
+            tipi_reserved=_s(row.get("tipi_reserved")),
+            tipi_trusting=_s(row.get("tipi_trusting")),
+            tipi_lazy=_s(row.get("tipi_lazy")),
+            tipi_relaxed=_s(row.get("tipi_relaxed")),
+            tipi_few_artistic=_s(row.get("tipi_few_artistic")),
+            tipi_outgoing=_s(row.get("tipi_outgoing")),
+            tipi_fault_finding=_s(row.get("tipi_fault_finding")),
+            tipi_thorough=_s(row.get("tipi_thorough")),
+            tipi_nervous=_s(row.get("tipi_nervous")),
+            tipi_imagination=_s(row.get("tipi_imagination")),
         ))
+
 
 
 
@@ -482,7 +505,7 @@ if st.session_state.generated and not st.session_state.submitted:
         key="comments_box"
     )
 
-
+    st.markdown("---")
     st.markdown("### Now, which response is most beneficial to your <u>long-term wellbeing</u>?", unsafe_allow_html=True)
 
     # Display the radio with the full response texts
