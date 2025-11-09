@@ -70,12 +70,12 @@ def _s(val):
 
 def insert_result(row):
     # Minimal validation — make comments mandatory if that's desired
-    required_keys = ["prolific_pid", "session_id", "topic", "user_prompt",
-                     "response_a", "response_b", "response_c",
-                     "user_choice", "comments"]
-    missing = [k for k in required_keys if k not in row or row[k] in (None, "")]
-    if missing:
-        raise ValueError(f"Missing required fields: {missing}")
+    # required_keys = ["prolific_pid", "session_id", "topic", "user_prompt",
+    #                  "response_a", "response_b", "response_c",
+    #                  "user_choice", "comments"]
+    # missing = [k for k in required_keys if k not in row or row[k] in (None, "")]
+    # if missing:
+    #     raise ValueError(f"Missing required fields: {missing}")
 
     eng = get_engine()
     with eng.begin() as conn:
@@ -140,7 +140,7 @@ def insert_result(row):
 
             ra=_s(row.get("response_a")),
             rb=_s(row.get("response_b")),
-            rc=_s(row.get("response_c")),
+            rc='',
             choice=_s(row.get("user_choice")),
             comments=_s(row.get("comments")),
 
@@ -441,9 +441,9 @@ if (not st.session_state.generated
         for attempt in range(4):
             try:
                 gen = client.responses.create(
-                    model="gpt-4.1",
+                    model="gpt-4o",
                     input=(
-                        "Generate **three distinct responses** representing different perspectives."
+                        "Generate **two opposite responses** representing different perspectives."
                         " Each response must begin with ### to separate them."
                         " Do not include labels or commentary.\n\nPrompt:\n"
                         f"{user_prompt}"
@@ -456,10 +456,11 @@ if (not st.session_state.generated
             except Exception as e:
                 time.sleep((2**attempt) + random.random())
 
-    if len(parts) < 3:
+    if len(parts) < 2:
         st.error("❌ Could not parse three responses correctly. Try rephrasing your prompt.")
     else:
-        st.session_state.resp_a, st.session_state.resp_b, st.session_state.resp_c = parts[:3]
+        st.session_state.resp_a, st.session_state.resp_b= parts[:2]
+        st.session_state.resp_c = ''
         st.session_state.generated = True
 
 # -------------------------
@@ -474,9 +475,9 @@ if st.session_state.generated and not st.session_state.submitted:
     st.write(st.session_state.resp_b)
     # st.info(f"Judge rating: {st.session_state.rating_b}")
 
-    st.subheader("Response C")
-    st.write(st.session_state.resp_c)
-    # st.info(f"Judge rating: {st.session_state.rating_c}")
+    # st.subheader("Response C")
+    # st.write(st.session_state.resp_c)
+    # # st.info(f"Judge rating: {st.session_state.rating_c}")
 
     st.markdown("### Which response do you prefer?")
 
@@ -484,7 +485,7 @@ if st.session_state.generated and not st.session_state.submitted:
     options = {
         "A":'**Response A:** '+st.session_state["resp_a"].strip(),
         "B": '**Response B:** '+st.session_state["resp_b"].strip(),
-        "C": '**Response C:** '+st.session_state["resp_c"].strip()
+        # "C": '**Response C:** '+st.session_state["resp_c"].strip()
     }
 
     # Display the radio with the full response texts
@@ -677,7 +678,7 @@ if st.session_state.generated and not st.session_state.submitted:
             "user_prompt": user_prompt,
             "response_a": st.session_state.resp_a,
             "response_b": st.session_state.resp_b,
-            "response_c": st.session_state.resp_c,
+            "response_c": '',
             # "rating_a": st.session_state.rating_a,
             # "rating_b": st.session_state.rating_b,
             # "rating_c": st.session_state.rating_c,
